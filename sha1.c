@@ -510,6 +510,7 @@ unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
 #define opad 0x5C
 
 	int size = strlen(key) + 160;
+	
 	//allocate memory 
 	unsigned char* keyPlus = calloc(size, sizeof(unsigned char));
 	//append key
@@ -528,13 +529,35 @@ unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
 	strcat(keyPlusMsg, msg);
 
 	SHAString(keyPlusMsg, keyPlusMsg);
+	
+	unsigned char * output = calloc(size + totalSize, sizeof(unsigned char));
+	
+	
+
+	//re-allocate memory 
+    keyPlus = calloc(size, sizeof(unsigned char));
+	//append key
+	strcat(keyPlus, key);
+	
+	//xor key+ and opad
+	for (int i = 0; i < size; i++) {
+		keyPlus[i] = opad ^ keyPlus[i];
+	}
+	
+	//sha-1 ((k+ xor opad) || sha-1(k+ xor ipad) || x) 
+	strcat(output, keyPlus);
+	strcat(output, keyPlusMsg);
+	SHAString(output, output);
+	return output;
+
 
 
 
 }
 
 int main()
-{/*
+{
+	/*
 	char str[] = "The quick brown fox jumps over the lazy dog";
 	int i;
 
@@ -549,14 +572,13 @@ int main()
 	SHAString(str, target);
 	for (i = 0; i < 20; i++)
 		printf("%02x", target[i]);
-	printf("\n\n");
+	printf("\n\n"); */
 
-	*/
+	
 	char str[] = "The quick brown fox jumps over the lazy dog";
-	BYTE target[20];
-
-
-	Hmacsha1_str("key", str ,0);
+	unsigned char * output = Hmacsha1_str("key", str, 0);
+	for (int i = 0; i < 20; i++)
+		printf("%02x", output[i]);
 	return 0;
 }
 
