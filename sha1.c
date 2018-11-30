@@ -504,67 +504,67 @@ void SHAHexstr(char* hexstr, unsigned char* ha)
  * \param mode control input parameter types
  * \return generated tag
  */
+
+// note to group: DO NOT USE MEMCPY, it changes the hash value everytime, instead use strcat
 unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
-{
+{      
+// ipad and opad
 #define ipad 0x36
 #define opad 0x5C
-	
-	int keyPlusSize = 64;
-	int hashOutputSize = 20;
-	int padding = keyPlusSize - strlen(key);
+//sizes
+#define blockSize 64
+#define outputSize 20
+        
+		
+	    unsigned char inner_hash[20]; // will store the output of the inner hash
+		unsigned char final_hash[20]; // will store final HMAC value
+		int paddingSize = blockSize - strlen(key);
+		
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		unsigned char* keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		unsigned char* keyPlus2 = calloc(blockSize, sizeof(unsigned char));
 
-	unsigned char i_key_pad[64];
-	unsigned char o_key_pad[64];
-	unsigned char inner_hash[20];
-	unsigned char final_hash[20];
+		memset(keyPlus1, '0', paddingSize);
+		strcpy(keyPlus1 + paddingSize, key);
 
-	memset(i_key_pad, 0, sizeof(i_key_pad));
-	memset(o_key_pad, 0, sizeof(o_key_pad));
-	memcpy(i_key_pad, key, strlen(key));
-	memcpy(o_key_pad, key, strlen(key));
-	
-	//allocate memory 
-	//unsigned char* keyPlus = calloc(keyPlusSize + 1, sizeof(unsigned char));
-	
-	//for (int i = 0; i < paddingSize; i++)
-		//keyPlus[i] = '/0';
+		memset(keyPlus2, '0', paddingSize);
+		strcpy(keyPlus2 + paddingSize, key);
+		
+		// xor k+ and ipad 
+		for (int i = 0; i < blockSize; i++) {
+			keyPlus1[i] ^= ipad;
+		}
+		// append msg to result 
+		int totalSize = strlen(msg) + blockSize;
+		unsigned char* keyPlusMsg = calloc(totalSize, sizeof(unsigned char));
+		strcpy(keyPlusMsg, keyPlus1);
+		strcat(keyPlusMsg, msg);
+		SHAString(keyPlusMsg, inner_hash);
+		for (int i = 0; i < 20; i++)
+			printf("%c", inner_hash[i]);
+		printf("\n");
+		
+		// xor k + and opad
+		for (int i = 0; i < blockSize; i++) {
+			keyPlus2[i] ^= opad;
+		}
+		int completeSize = blockSize + outputSize;
+		unsigned char * combinedMessage = calloc(completeSize, sizeof(unsigned char));
+		strcpy(combinedMessage, keyPlus2);
+		strcat(combinedMessage, inner_hash);
+		SHAString(combinedMessage, final_hash);
 
-	//append key
-	//strncpy(keyPlus + paddingSize, key, strlen(key));
-	
-	// xor k+ and ipad && xor k+ and opad
-	for (int i = 0; i < keyPlusSize; i++) {
-		i_key_pad[i] ^= ipad;
-		o_key_pad[i] ^= opad;
-	}
-	
-	//append msg to result 
-	int totalSize = strlen(msg) + keyPlusSize;
-	unsigned char* keyPlusMsg = calloc(totalSize, sizeof(unsigned char));
-	memcpy(keyPlusMsg, i_key_pad, keyPlusSize);
-	memcpy(keyPlusMsg + keyPlusSize, msg, strlen(msg));
-
-	SHAString(keyPlusMsg, inner_hash);
-
-	unsigned char * output = calloc(keyPlusSize + hashOutputSize, sizeof(unsigned char));
-	
-	//sha-1 ((k+ xor opad) || sha-1(k+ xor ipad) || x) 
-	memcpy(output, o_key_pad, keyPlusSize);
-	memcpy(output + keyPlusSize, inner_hash, hashOutputSize);
-	SHAString(output, final_hash);
-	
-	for (int i = 0; i < 20; i++)
-		printf("%02x", final_hash[i]);
-
-	return final_hash;
+		for (int i = 0; i < 20; i++)
+			printf("%02x", final_hash[i]);
+		printf("\n");
+		return final_hash;
 }
 
 int main()
 {
 	/*
-	char str[] = "The quick brown fox jumps over the lazy dog";
+	char str[100] = "The quick brown fox jumps over the lazy dog";
 	int i;
-
 	char hexstr[] = "FFFFFFFF";
 	BYTE target[20];
 	SHAHexstr(hexstr, target);
@@ -576,15 +576,12 @@ int main()
 	SHAString(str, target);
 	for (i = 0; i < 20; i++)
 		printf("%02x", target[i]);
-	printf("\n\n"); 
-	*/
+	printf("\n\n"); */
 	
 	char str[] = "The quick brown fox jumps over the lazy dog";
 	unsigned char * output = Hmacsha1_str("key", str, 0);
 	for (int i = 0; i < 20; i++)
-		printf("%02x", output[i]);
-	
-	
+	     printf("%02x", output[i]);
 	return 0;
 }
 
