@@ -509,12 +509,12 @@ void SHAHexstr(char* hexstr, unsigned char* ha)
 // note to group: DO NOT USE MEMCPY, it changes the hash value everytime, instead use strcat
 unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
 {
-	     SHA_CTX ictx, octx; //sha-content
+	    SHA_CTX ictx, octx; //sha-content
 		
 	    int outputSize = 20;
 	    int blockSize = 64;
 	    unsigned char * inner_hash = calloc(outputSize, sizeof(unsigned char)); // will store the output of the inner hash
-		unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); // will store final HMAC value
+		unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); // will store outer HASH value
 		unsigned char * buffer;
 		unsigned char* keyPlus1;
 		unsigned char* keyPlus2;
@@ -587,51 +587,151 @@ unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
 		SHAUpdate(&octx, keyPlus2, blockSize);
 		SHAUpdate(&octx, inner_hash, outputSize);
 		SHAFinal(final_hash, &octx); 
+		
+		return final_hash;
+}
+
+/**
+* \brief HMAC-SHA1 message authentication code for a file
+* \param msg input string
+* \param key input key
+* \param inFile input file name
+* \param mode control input parameter types
+* \return generated tag
+*/
+unsigned char* Hmacsha1_file(unsigned char* key, char* inFile, int mode){
+	SHA_CTX ictx, octx; //sha-content
+
+	int outputSize = 20;
+	int blockSize = 64;
+	unsigned char * inner_hash = calloc(outputSize, sizeof(unsigned char)); // will store the output of the inner hash
+	unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); // will store final HMAC value
+	unsigned char* keyPlus1;
+	unsigned char* keyPlus2;
+
 	
-		return final_hash; // return outer hash
+	// open file
+	FILE * file =  fopen(inFile, "rb");
+	fseek(file, 0, SEEK_END);
+	int length = ftell(file);
+	rewind(file);
+	unsigned char * buffer = calloc(length + 1, sizeof(unsigned char));
+	fread(buffer, length, 1, file);
+	
+	// set up key plus and buffer
+	switch (mode){
+
+		// inputs are cstrings
+	case 0:
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
+		strcpy(keyPlus1, key);
+		strcpy(keyPlus2, key);
+
+		// inner digest
+		// xor k+ and ipad 
+		SHAInit(&ictx);
+		for (int i = 0; i < blockSize; i++)
+			keyPlus1[i] ^= 0x36;
+		SHAUpdate(&ictx, keyPlus1, blockSize);
+		SHAUpdate(&ictx, buffer,length);
+		break;
+
+		// inputs are hex strings
+	case 1:
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
+		for (int i = 0; i < strlen(key) / 2; i++){
+			sscanf(key + 2 * i, "%02x", &keyPlus1[i]);
+			sscanf(key + 2 * i, "%02x", &keyPlus2[i]);
+		}
+
+		// convert buffer to hex
+		unsigned char * hex = calloc(length + 1, sizeof(unsigned char));
+		for (int i = 0; i < length / 2; i++)
+			sscanf(buffer + 2 * i, "%02x", &hex[i]);
+		//length /= 2;
+		// inner digest
+		// xor k+ and ipad 
+		SHAInit(&ictx);
+		for (int i = 0; i < blockSize; i++)
+			keyPlus1[i] ^= 0x36;
+		SHAUpdate(&ictx, keyPlus1, blockSize);
+		SHAUpdate(&ictx, hex, strlen(hex));
+		break;
+		
+
+		// if mode is not 0 or 1, assume inputs are cstring
+	default:
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
+		strcpy(keyPlus1, key);
+		strcpy(keyPlus2, key);
+
+		// inner digest
+		// xor k+ and ipad 
+		SHAInit(&ictx);
+		for (int i = 0; i < blockSize; i++)
+			keyPlus1[i] ^= 0x36;
+		SHAUpdate(&ictx, keyPlus1, blockSize);
+		SHAUpdate(&ictx, buffer, length);
+
+		break;
+	}
+
+	
+	
+	
+	
+	SHAFinal(inner_hash, &ictx);
+
+	// outer hash 
+	SHAInit(&octx);
+
+	// outer hash
+	// xor k + and opad
+	for (int i = 0; i < blockSize; i++) {
+		keyPlus2[i] ^= 0x5c;
+	}
+	SHAUpdate(&octx, keyPlus2, blockSize);
+	SHAUpdate(&octx, inner_hash, outputSize);
+	SHAFinal(final_hash, &octx);
+	
+	// close file
+	fclose(file);
+	for (int i = 0; i < 20; i++)
+		printf("%02x", final_hash[i]);
+	printf("\n");
+	return final_hash; // return outer hash
+	
 }
 
 int main()
 {
-	/*
-	char str[100] = "The quick brown fox jumps over the lazy dog";
-	int i;
-	char hexstr[] = "FFFFFFFF";
-	BYTE target[20];
-	BYTE target2[20];
-	SHAHexstr(hexstr, target);
-	
-	for (i = 0; i < 20; i++)
-		printf("%02x", target[i]);
-	printf("\n\n");
-
-
-	SHAString(str, target);
-	for (i = 0; i < 20; i++)
-		printf("%c", target[i]);
-	printf("\n\n");  
-
-	char str1[] = "]SOThe quick brown fox jumps over the lazy dog";
-	SHAString(str1, target2);
-	for (i = 0; i < 20; i++)
-		printf("%c", target2[i]);
-	printf("\n\n");*/
 	
 	
 	char str[] = "The quick brown fox jumps over the lazy dog";
 	char hex[] = "FFFFFF";
 	unsigned char * output1 = calloc(20, sizeof(unsigned char));
 	unsigned char * output2 = calloc(20, sizeof(unsigned char));
-	strcpy(output1, Hmacsha1_str("key", str, 0));
+	
+	strncpy(output1, Hmacsha1_file("key", "boat.jpg", 0), 20);
 	for (int i = 0; i < 20; i++)
 	     printf("%02x", output1[i]);
-	printf("\n");
+	printf("\n"); 
 
-	strcpy(output2, Hmacsha1_str("FFFFEE", hex, 1));
+	/*strcpy(output2, Hmacsha1_str("FFFF","FF", 1));
 	for (int i = 0; i < 20; i++)
 		printf("%02x", output2[i]);
+	printf("\n");*/
 
+	
+	
+	
 	return 0; 
 }
-
+//Porj02_HMACSHA1.pdf
 
