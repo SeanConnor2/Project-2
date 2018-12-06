@@ -4,22 +4,20 @@
 /* SHA: NIST's Secure Hash Algorithm */
 
 /*	This version written November 2000 by David Ireland of
-	DI Management Services Pty Limited <code@di-mgt.com.au>
-
-	Adapted from code in the Python Cryptography Toolkit,
-	version 1.0.0 by A.M. Kuchling 1995.
+DI Management Services Pty Limited <code@di-mgt.com.au>
+Adapted from code in the Python Cryptography Toolkit,
+version 1.0.0 by A.M. Kuchling 1995.
 */
 
 /* AM Kuchling's posting:-
-   Based on SHA code originally posted to sci.crypt by Peter Gutmann
-   in message <30ajo5$oe8@ccu2.auckland.ac.nz>.
-   Modified to test for endianness on creation of SHA objects by AMK.
-   Also, the original specification of SHA was found to have a weakness
-   by NSA/NIST.  This code implements the fixed version of SHA.
+Based on SHA code originally posted to sci.crypt by Peter Gutmann
+in message <30ajo5$oe8@ccu2.auckland.ac.nz>.
+Modified to test for endianness on creation of SHA objects by AMK.
+Also, the original specification of SHA was found to have a weakness
+by NSA/NIST.  This code implements the fixed version of SHA.
 */
 
 /* Here's the first paragraph of Peter Gutmann's posting:
-
 The following is my SHA (FIPS 180) code updated to allow use of the "fixed"
 SHA, thanks to Jim Gillogly and an anonymous contributor for the information on
 what's changed in the new version.  The fix is a simple change which involves
@@ -41,7 +39,7 @@ effort (for example the reengineering of a great many Capstone chips).
 typedef unsigned char *POINTER;
 
 /* UINT4 defines a four byte word */
- typedef unsigned long int UINT4;
+typedef unsigned long int UINT4;
 //#include <stdint.h>        // on unix and mac computer
 //typedef uint32_t UINT4;    // on unix and mac computer
 
@@ -104,10 +102,10 @@ static void SHAtoByte(BYTE *output, UINT4 *input, unsigned int len);
 
 
 /* The SHS f()-functions.  The f1 and f3 functions can be optimized to
-   save one boolean operation each - thanks to Rich Schroeppel,
-   rcs@cs.arizona.edu for discovering this */
+save one boolean operation each - thanks to Rich Schroeppel,
+rcs@cs.arizona.edu for discovering this */
 
-   /*#define f1(x,y,z) ( ( x & y ) | ( ~x & z ) )          // Rounds  0-19 */
+/*#define f1(x,y,z) ( ( x & y ) | ( ~x & z ) )          // Rounds  0-19 */
 #define f1(x,y,z)   ( z ^ ( x & ( y ^ z ) ) )           /* Rounds  0-19 */
 #define f2(x,y,z)   ( x ^ y ^ z )                       /* Rounds 20-39 */
 /*#define f3(x,y,z) ( ( x & y ) | ( x & z ) | ( y & z ) )   // Rounds 40-59 */
@@ -130,46 +128,41 @@ static void SHAtoByte(BYTE *output, UINT4 *input, unsigned int len);
 #define h4init  0xC3D2E1F0L
 
 /* Note that it may be necessary to add parentheses to these macros if they
-   are to be called with expressions as arguments */
-   /* 32-bit rotate left - kludged with shifts */
+are to be called with expressions as arguments */
+/* 32-bit rotate left - kludged with shifts */
 
 #define ROTL(n,X)  ( ( ( X ) << n ) | ( ( X ) >> ( 32 - n ) ) )
 
 /* The initial expanding function.  The hash function is defined over an
-   80-UINT2 expanded input array W, where the first 16 are copies of the input
-   data, and the remaining 64 are defined by
-
-		W[ i ] = W[ i - 16 ] ^ W[ i - 14 ] ^ W[ i - 8 ] ^ W[ i - 3 ]
-
-   This implementation generates these values on the fly in a circular
-   buffer - thanks to Colin Plumb, colin@nyx10.cs.du.edu for this
-   optimization.
-
-   The updated SHS changes the expanding function by adding a rotate of 1
-   bit.  Thanks to Jim Gillogly, jim@rand.org, and an anonymous contributor
-   for this information */
+80-UINT2 expanded input array W, where the first 16 are copies of the input
+data, and the remaining 64 are defined by
+W[ i ] = W[ i - 16 ] ^ W[ i - 14 ] ^ W[ i - 8 ] ^ W[ i - 3 ]
+This implementation generates these values on the fly in a circular
+buffer - thanks to Colin Plumb, colin@nyx10.cs.du.edu for this
+optimization.
+The updated SHS changes the expanding function by adding a rotate of 1
+bit.  Thanks to Jim Gillogly, jim@rand.org, and an anonymous contributor
+for this information */
 
 #define expand(W,i) ( W[ i & 15 ] = ROTL( 1, ( W[ i & 15 ] ^ W[ (i - 14) & 15 ] ^ \
                                                  W[ (i - 8) & 15 ] ^ W[ (i - 3) & 15 ] ) ) )
 
 
-   /* The prototype SHS sub-round.  The fundamental sub-round is:
-
-		   a' = e + ROTL( 5, a ) + f( b, c, d ) + k + data;
-		   b' = a;
-		   c' = ROTL( 30, b );
-		   d' = c;
-		   e' = d;
-
-	  but this is implemented by unrolling the loop 5 times and renaming the
-	  variables ( e, a, b, c, d ) = ( a', b', c', d', e' ) each iteration.
-	  This code is then replicated 20 times for each of the 4 functions, using
-	  the next 20 values from the W[] array each time */
+/* The prototype SHS sub-round.  The fundamental sub-round is:
+a' = e + ROTL( 5, a ) + f( b, c, d ) + k + data;
+b' = a;
+c' = ROTL( 30, b );
+d' = c;
+e' = d;
+but this is implemented by unrolling the loop 5 times and renaming the
+variables ( e, a, b, c, d ) = ( a', b', c', d', e' ) each iteration.
+This code is then replicated 20 times for each of the 4 functions, using
+the next 20 values from the W[] array each time */
 
 #define subRound(a, b, c, d, e, f, k, data) \
     ( e += ROTL( 5, a ) + f( b, c, d ) + k + data, b = ROTL( 30, b ) )
 
-	  /* Initialize the SHS values */
+/* Initialize the SHS values */
 
 void SHAInit(SHA_CTX *shsInfo)
 {
@@ -187,11 +180,10 @@ void SHAInit(SHA_CTX *shsInfo)
 
 
 /* Perform the SHS transformation.  Note that this code, like MD5, seems to
-   break some optimizing compilers due to the complexity of the expressions
-   and the size of the basic block.  It may be necessary to split it into
-   sections, e.g. based on the four subrounds
-
-   Note that this corrupts the shsInfo->data area */
+break some optimizing compilers due to the complexity of the expressions
+and the size of the basic block.  It may be necessary to split it into
+sections, e.g. based on the four subrounds
+Note that this corrupts the shsInfo->data area */
 
 static void SHSTransform(digest, data)
 UINT4 *digest, *data;
@@ -199,7 +191,7 @@ UINT4 *digest, *data;
 	UINT4 A, B, C, D, E;     /* Local vars */
 	UINT4 eData[16];       /* Expanded data */
 
-	/* Set up first buffer and local data buffer */
+						   /* Set up first buffer and local data buffer */
 	A = digest[0];
 	B = digest[1];
 	C = digest[2];
@@ -301,7 +293,7 @@ UINT4 *digest, *data;
 }
 
 /* When run on a little-endian CPU we need to perform byte reversal on an
-   array of long words. */
+array of long words. */
 
 static void longReverse(UINT4 *buffer, int byteCount, int Endianness)
 {
@@ -367,7 +359,7 @@ void SHAUpdate(SHA_CTX *shsInfo, BYTE *buffer, int count)
 }
 
 /* Final wrapup - pad to SHS_DATASIZE-byte boundary with the bit pattern
-   1 0* (64-bit count of bits processed, MSB-first) */
+1 0* (64-bit count of bits processed, MSB-first) */
 
 void SHAFinal(BYTE *output, SHA_CTX *shsInfo)
 {
@@ -379,7 +371,7 @@ void SHAFinal(BYTE *output, SHA_CTX *shsInfo)
 	count = (count >> 3) & 0x3F;
 
 	/* Set the first char of padding to 0x80.  This is safe since there is
-	   always at least one byte free */
+	always at least one byte free */
 	dataPtr = (BYTE *)shsInfo->data + count;
 	*dataPtr++ = 0x80;
 
@@ -440,12 +432,12 @@ char *dig2 = "84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1";
 char *dig3 = "34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F";
 
 /* Output should look like:-
- a9993e36 4706816a ba3e2571 7850c26c 9cd0d89d
- A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D <= correct
- 84983e44 1c3bd26e baae4aa1 f95129e5 e54670f1
- 84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1 <= correct
- 34aa973c d4c4daa4 f61eeb2b dbad2731 6534016f
- 34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F <= correct
+a9993e36 4706816a ba3e2571 7850c26c 9cd0d89d
+A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D <= correct
+84983e44 1c3bd26e baae4aa1 f95129e5 e54670f1
+84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1 <= correct
+34aa973c d4c4daa4 f61eeb2b dbad2731 6534016f
+34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F <= correct
 */
 
 
@@ -498,97 +490,97 @@ void SHAHexstr(char* hexstr, unsigned char* ha)
 	SHAFinal(ha, &shaContext);
 }
 /**
- * \brief HMAC-SHA1 message authentication code for a string 
- * \param msg input string
- * \param key input key
- * \param inFile input file name
- * \param mode control input parameter types
- * \return generated tag
- */
+* \brief HMAC-SHA1 message authentication code for a string
+* \param msg input string
+* \param key input key
+* \param inFile input file name
+* \param mode control input parameter types
+* \return generated tag
+*/
 
 // note to group: DO NOT USE MEMCPY, it changes the hash value everytime, instead use strcat
 unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
 {
-	    SHA_CTX ictx, octx; //sha-content
-		
-	    int outputSize = 20;
-	    int blockSize = 64;
-	    unsigned char * inner_hash = calloc(outputSize, sizeof(unsigned char)); // will store the output of the inner hash
-		unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); // will store outer HASH value
-		unsigned char * buffer;
-		unsigned char* keyPlus1;
-		unsigned char* keyPlus2;
+	SHA_CTX ictx, octx; //sha-content
 
-		switch (mode){
-			// inputs are cstrings
-		case 0:
-			// message bufer
-			buffer = calloc(strlen(msg), sizeof(unsigned char));
-			strcpy(buffer, msg);
+	int outputSize = 20;
+	int blockSize = 64;
+	unsigned char * inner_hash = calloc(outputSize, sizeof(unsigned char)); // will store the output of the inner hash
+	unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); // will store outer HASH value
+	unsigned char * buffer;
+	unsigned char* keyPlus1;
+	unsigned char* keyPlus2;
 
-			// allocate memory for key+, key+ xor ipad and key+ xor opad
-		    keyPlus1 = calloc(blockSize, sizeof(unsigned char));
-			keyPlus2 = calloc(blockSize, sizeof(unsigned char));
-			strcpy(keyPlus1, key);
-			strcpy(keyPlus2, key);
-			break;
+	switch (mode) {
+		// inputs are cstrings
+	case 0:
+		// message bufer
+		buffer = calloc(strlen(msg), sizeof(unsigned char));
+		strcpy(buffer, msg);
 
-			// inputs are hex strings
-		case 1:
-			// message buffer
-			buffer = calloc(1024, sizeof(unsigned char));
-			for (int i = 0; i < strlen(msg)/2; i++)
-				sscanf(msg + 2 * i, "%02x", &buffer[i]);
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
+		strcpy(keyPlus1, key);
+		strcpy(keyPlus2, key);
+		break;
 
-			// allocate memory for key+, key+ xor ipad and key+ xor opad
-			keyPlus1 = calloc(blockSize, sizeof(unsigned char));
-			keyPlus2 = calloc(blockSize, sizeof(unsigned char));
-			for (int i = 0; i < strlen(key) / 2; i++){
-				sscanf(key + 2 * i, "%02x", &keyPlus1[i]);
-				sscanf(key + 2 * i, "%02x", &keyPlus2[i]);
-			}
-			
-			break;
+		// inputs are hex strings
+	case 1:
+		// message buffer
+		buffer = calloc(1024, sizeof(unsigned char));
+		for (int i = 0; i < strlen(msg) / 2; i++)
+			sscanf(msg + 2 * i, "%02x", &buffer[i]);
+
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
+		for (int i = 0; i < strlen(key) / 2; i++) {
+			sscanf(key + 2 * i, "%02x", &keyPlus1[i]);
+			sscanf(key + 2 * i, "%02x", &keyPlus2[i]);
+		}
+
+		break;
 
 		// if mode is not 0 or 1, assume inputs are cstring
-		default:
-			// message buffer
-			buffer = calloc(strlen(msg), sizeof(unsigned char));
-			strcpy(buffer, msg);
+	default:
+		// message buffer
+		buffer = calloc(strlen(msg), sizeof(unsigned char));
+		strcpy(buffer, msg);
 
-			// allocate memory for key+, key+ xor ipad and key+ xor opad
-			keyPlus1 = calloc(blockSize, sizeof(unsigned char));
-			keyPlus2 = calloc(blockSize, sizeof(unsigned char));
-			strcpy(keyPlus1, key);
-			strcpy(keyPlus2, key);
-			break;
-		}
-		
-		// inner digest
-		// xor k+ and ipad 
-		SHAInit(&ictx);
-		for (int i = 0; i < blockSize; i++) {
-			keyPlus1[i] ^= 0x36;
-		}
+		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
+		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
+		strcpy(keyPlus1, key);
+		strcpy(keyPlus2, key);
+		break;
+	}
 
-		// inner SHA-1
-		SHAUpdate(&ictx, keyPlus1, blockSize);
-		SHAUpdate(&ictx, buffer, strlen(buffer));
-		SHAFinal(inner_hash, &ictx);
-	
-		// outer hash
-		// xor k + and opad
-		for (int i = 0; i < blockSize; i++) {
-			keyPlus2[i] ^= 0x5c;
-		}
+	// inner digest
+	// xor k+ and ipad 
+	SHAInit(&ictx);
+	for (int i = 0; i < blockSize; i++) {
+		keyPlus1[i] ^= 0x36;
+	}
 
-		// outer hash 
-		SHAInit(&octx);
-		SHAUpdate(&octx, keyPlus2, blockSize);
-		SHAUpdate(&octx, inner_hash, outputSize);
-		SHAFinal(final_hash, &octx); 
-		
-		return final_hash;
+	// inner SHA-1
+	SHAUpdate(&ictx, keyPlus1, blockSize);
+	SHAUpdate(&ictx, buffer, strlen(buffer));
+	SHAFinal(inner_hash, &ictx);
+
+	// outer hash
+	// xor k + and opad
+	for (int i = 0; i < blockSize; i++) {
+		keyPlus2[i] ^= 0x5c;
+	}
+
+	// outer hash 
+	SHAInit(&octx);
+	SHAUpdate(&octx, keyPlus2, blockSize);
+	SHAUpdate(&octx, inner_hash, outputSize);
+	SHAFinal(final_hash, &octx);
+
+	return final_hash;
 }
 
 /**
@@ -599,80 +591,79 @@ unsigned char* Hmacsha1_str(unsigned char* key, unsigned char* msg, int mode)
 * \param mode control input parameter types
 * \return generated tag
 */
-unsigned char* Hmacsha1_file(unsigned char* key, char* inFile, int mode){
+unsigned char* Hmacsha1_file(unsigned char* key, char* inFile, int mode) {
 	SHA_CTX ictx, octx; //sha-content
 
 	int outputSize = 20;
 	int blockSize = 64;
-	unsigned char * inner_hash = calloc(outputSize, sizeof(unsigned char)); // will store the output of the inner hash
-	unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); // will store final HMAC value
+	unsigned char * inner_hash = calloc(outputSize, sizeof(unsigned char)); //This will store the output of the inner hash
+	unsigned char * final_hash = calloc(outputSize, sizeof(unsigned char)); //This will store final HMAC value
 	unsigned char* keyPlus1;
 	unsigned char* keyPlus2;
 
-	
-	// open file
-	FILE * file =  fopen(inFile, "rb");
+
+	//Opening the file
+	FILE * file = fopen(inFile, "rb");
 	fseek(file, 0, SEEK_END);
 	int length = ftell(file);
 	rewind(file);
 	unsigned char * buffer = calloc(length + 1, sizeof(unsigned char));
 	fread(buffer, length, 1, file);
-	
-	// set up key plus and buffer
-	switch (mode){
 
-		// inputs are cstrings
+	//Setting up key plus and the buffer
+	switch (mode) {
+		//Inputs are cstrings
 	case 0:
-		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		//Allocate memory for key+, key+ xor ipad and key+ xor opad
 		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
 		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
 		strcpy(keyPlus1, key);
 		strcpy(keyPlus2, key);
 
-		// inner digest
-		// xor k+ and ipad 
+		//Inner digest
+		//Xor k+ and ipad 
 		SHAInit(&ictx);
 		for (int i = 0; i < blockSize; i++)
 			keyPlus1[i] ^= 0x36;
 		SHAUpdate(&ictx, keyPlus1, blockSize);
-		SHAUpdate(&ictx, buffer,length);
+		SHAUpdate(&ictx, buffer, length);
 		break;
 
-		// inputs are hex strings
+		//Inputs are hex strings
 	case 1:
-		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		//Allocate memory for key+, key+ xor ipad and key+ xor opad
 		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
 		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
-		for (int i = 0; i < strlen(key) / 2; i++){
+		for (int i = 0; i < strlen(key) / 2; i++) {
 			sscanf(key + 2 * i, "%02x", &keyPlus1[i]);
 			sscanf(key + 2 * i, "%02x", &keyPlus2[i]);
 		}
 
-		// convert buffer to hex
+		//Convert buffer to hex
 		unsigned char * hex = calloc(length + 1, sizeof(unsigned char));
 		for (int i = 0; i < length / 2; i++)
 			sscanf(buffer + 2 * i, "%02x", &hex[i]);
-		//length /= 2;
-		// inner digest
-		// xor k+ and ipad 
+		//Length /= 2;
+		//Inner digest
+		//Xor k+ and ipad 
 		SHAInit(&ictx);
 		for (int i = 0; i < blockSize; i++)
 			keyPlus1[i] ^= 0x36;
 		SHAUpdate(&ictx, keyPlus1, blockSize);
 		SHAUpdate(&ictx, hex, strlen(hex));
 		break;
-		
 
-		// if mode is not 0 or 1, assume inputs are cstring
+
+		//If mode is not 0 or 1, assume inputs are cstring
 	default:
-		// allocate memory for key+, key+ xor ipad and key+ xor opad
+		//Allocate memory for key+, key+ xor ipad and key+ xor opad
 		keyPlus1 = calloc(blockSize, sizeof(unsigned char));
 		keyPlus2 = calloc(blockSize, sizeof(unsigned char));
 		strcpy(keyPlus1, key);
 		strcpy(keyPlus2, key);
 
-		// inner digest
-		// xor k+ and ipad 
+		//Inner digest
+		//Xor k+ and ipad 
 		SHAInit(&ictx);
 		for (int i = 0; i < blockSize; i++)
 			keyPlus1[i] ^= 0x36;
@@ -682,56 +673,44 @@ unsigned char* Hmacsha1_file(unsigned char* key, char* inFile, int mode){
 		break;
 	}
 
-	
-	
-	
-	
 	SHAFinal(inner_hash, &ictx);
-
-	// outer hash 
+	//Outer hash 
 	SHAInit(&octx);
 
-	// outer hash
-	// xor k + and opad
+	//Outer hash
+	//Xor k + and opad
 	for (int i = 0; i < blockSize; i++) {
 		keyPlus2[i] ^= 0x5c;
 	}
 	SHAUpdate(&octx, keyPlus2, blockSize);
 	SHAUpdate(&octx, inner_hash, outputSize);
 	SHAFinal(final_hash, &octx);
-	
-	// close file
-	fclose(file);
-	for (int i = 0; i < 20; i++)
-		printf("%02x", final_hash[i]);
-	printf("\n");
-	return final_hash; // return outer hash
-	
-}
 
+	//Close file
+	fclose(file);
+	/*for (int i = 0; i < 20; i++)
+		printf("%02x", final_hash[i]);
+	printf("\n");*/
+	//Return the outer hash
+	return final_hash; 
+}
 int main()
 {
-	
-	
 	char str[] = "The quick brown fox jumps over the lazy dog";
 	char hex[] = "FFFFFF";
 	unsigned char * output1 = calloc(20, sizeof(unsigned char));
 	unsigned char * output2 = calloc(20, sizeof(unsigned char));
-	
-	strncpy(output1, Hmacsha1_file("key", "boat.jpg", 0), 20);
+
+	strncpy(output1, Hmacsha1_file("labrador", "puppy.jpg", 0), 20);
 	for (int i = 0; i < 20; i++)
-	     printf("%02x", output1[i]);
-	printf("\n"); 
+		printf("%02x", output1[i]);
+	printf("\n");
 
 	/*strcpy(output2, Hmacsha1_str("FFFF","FF", 1));
 	for (int i = 0; i < 20; i++)
-		printf("%02x", output2[i]);
+	printf("%02x", output2[i]);
 	printf("\n");*/
 
-	
-	
-	
-	return 0; 
+	return 0;
 }
 //Porj02_HMACSHA1.pdf
-
